@@ -22,17 +22,16 @@ const LoginForm = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
-			const response = await api.post("/auth/login/", {
+			const response = await api.post("/login", {
 				username: formData.username,
 				password: formData.password,
 			});
 
-			if (!response.ok) throw new Error("Login failed");
+			if (response.status != 200) {
+				throw new Error("Login failed");
+			}
 
-			const data = await response.json();
-
-			// Use AuthContext's login instead of localStorage
-			login(data.access); // Pass the access token to AuthProvider
+			login(response.data); // Pass the access token to AuthProvider
 
 			toast.success("Login successful!");
 			navigate("/dashboard");

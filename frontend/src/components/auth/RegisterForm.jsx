@@ -55,13 +55,15 @@ const RegisterForm = () => {
 		}
 
 		try {
-			const response = await api.post("/auth/register/", formData);
+			const response = await api.post("/register", formData);
 
-			if (!response.ok) {
-				const errorData = await response.json();
-				throw new Error(errorData.message || "Registration failed");
+			// if (!response.ok) {
+			// 	const errorData = await response.json();
+			// 	throw new Error(errorData.message || "Registration failed");
+			// }
+			if (response.status != 200) {
+				throw new Error("Registration failed");
 			}
-
 			toast.success("Registration successful! Please login.");
 			navigate("/login");
 		} catch (error) {
