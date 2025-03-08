@@ -82,9 +82,9 @@ public class SecCtrl {
         return "Hello World!";
     }
 
-    @GetMapping("/questions/{category}")
+    @GetMapping("/questions")
     public List<Quiz> getQuizQuestions(@RequestHeader("Authorization") String authHeader,
-            @PathVariable String category,  // Get category from URL
+                                       @RequestParam(defaultValue = "Linux") String category,  // Get category from URL
             @RequestParam(defaultValue = "10") int limit) {
         String token = authHeader.substring(7);
         String username = jwtService.extractUsername(token);
