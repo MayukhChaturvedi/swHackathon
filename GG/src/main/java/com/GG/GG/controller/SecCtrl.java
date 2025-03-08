@@ -19,7 +19,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -164,4 +166,42 @@ public class SecCtrl {
         // Save updated stats
         networkingRepo.save(networking);
     }
+    @GetMapping("/profile")
+    public ResponseEntity<Map<String, Object>> getProfile(@RequestHeader("Authorization") String authHeader) {
+        String token = authHeader.substring(7);
+        String username = jwtService.extractUsername(token);
+
+        Optional<Networking> networkingOptional = networkingRepo.findByUsername(username);
+
+        if (networkingOptional.isPresent()) {
+            Networking networking = networkingOptional.get();
+
+            // Return user stats as JSON
+            Map<String, Object> response = new HashMap<>();
+            response.put("username", networking.getUsername());
+            response.put("totalEasy", networking.getTotalEasy());
+            response.put("correctEasy", networking.getCorrectEasy());
+            response.put("totalMedium", networking.getTotalMedium());
+            response.put("correctMedium", networking.getCorrectMedium());
+            response.put("totalHard", networking.getTotalHard());
+            response.put("correctHard", networking.getCorrectHard());
+
+            return ResponseEntity.ok(response);
+        } else {
+            // Return default JSON with zero values
+            Map<String, Object> defaultResponse = new HashMap<>();
+            defaultResponse.put("username", username);
+            defaultResponse.put("totalEasy", 0);
+            defaultResponse.put("correctEasy", 0);
+            defaultResponse.put("totalMedium", 0);
+            defaultResponse.put("correctMedium", 0);
+            defaultResponse.put("totalHard", 0);
+            defaultResponse.put("correctHard", 0);
+
+            return ResponseEntity.ok(defaultResponse);
+        }
+    }
+
 }
+
+
