@@ -54,6 +54,7 @@ public class User {
         this.username = username;
     }
 
+    @Column(unique = true, nullable = false)  // Ensure uniqueness and non-null
     private String username;
     private String name;
     private String role;

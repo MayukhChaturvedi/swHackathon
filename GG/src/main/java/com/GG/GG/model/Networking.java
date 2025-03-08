@@ -13,16 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 public class Networking {
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-@Id
-    private int id;
+    @Id
     private String username;
 
     public String getUsername() {
@@ -68,6 +59,17 @@ public class Networking {
     public int getCorrectMedium() {
         return correctMedium;
     }
+
+    public Networking(String username, int totalHard, int totalMedium, int totalEasy, int correctHard, int correctMedium, int correctEasy) {
+        this.username = username;
+        this.totalHard = totalHard;
+        this.totalMedium = totalMedium;
+        this.totalEasy = totalEasy;
+        this.correctHard = correctHard;
+        this.correctMedium = correctMedium;
+        this.correctEasy = correctEasy;
+    }
+    public Networking(){}
 
     public void setCorrectMedium(int correctMedium) {
         this.correctMedium = correctMedium;

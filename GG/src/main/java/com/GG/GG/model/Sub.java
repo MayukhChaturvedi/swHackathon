@@ -19,14 +19,14 @@ public class Sub {
     }
 
     public boolean isCorrect() {
-        return isCorrect;
+        return correct;
     }
 
     public void setCorrect(boolean correct) {
-        isCorrect = correct;
+        this.correct = correct;
     }
 
     private String difficulty;
-    private boolean isCorrect;
+    private boolean correct;
 
 }
