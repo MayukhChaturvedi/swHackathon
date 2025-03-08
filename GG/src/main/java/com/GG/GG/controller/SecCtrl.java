@@ -82,12 +82,16 @@ public class SecCtrl {
         return "Hello World!";
     }
 
-    @GetMapping("/questions")
-    public List<Quiz> getQuizQuestions(
-            @RequestParam(defaultValue = "10") int limit,
-            @RequestParam(defaultValue = "Linux") String category,
-            @RequestParam(defaultValue = "easy") String difficulty) {
-        return quizService.fetchQuizQuestions(limit, category, difficulty);
+    @GetMapping("/questions/{category}")
+    public List<Quiz> getQuizQuestions(@RequestHeader("Authorization") String authHeader,
+            @PathVariable String category,  // Get category from URL
+            @RequestParam(defaultValue = "10") int limit) {
+        String token = authHeader.substring(7);
+        String username = jwtService.extractUsername(token);
+        Optional<Networking> networkingOptional = networkingRepo.findByUsername(username);
+        Networking networking = networkingOptional.orElse(null);
+
+        return quizService.fetchQuizQuestions(networking,limit, category);
     }
     @PostMapping("/submit")
     public void submitQuiz(@RequestHeader("Authorization") String authHeader, @RequestBody List<Sub> answers) {
