@@ -65,7 +65,7 @@ const Navbar = () => {
 					{/* User Profile and Sign Out */}
 					<div className="flex items-center space-x-3">
 						<button
-							onClick={() => navigate("/user")}
+							onClick={() => navigate("/progress")}
 							className="p-2 rounded-full bg-indigo-800 text-white hover:bg-indigo-700 transition-colors duration-200"
 							aria-label="User Profile"
 						>
