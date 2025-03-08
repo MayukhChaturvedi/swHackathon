@@ -61,20 +61,13 @@ const Quiz = () => {
 	const submitQuizResults = async () => {
 		setIsSubmitting(true);
 		try {
-			const quizData = {
-				category: subject,
-				results: results.map((result, index) => ({
-					question_id: questions[index].id,
-					question: result.question,
-					difficulty: result.difficulty,
-					correct: result.correct,
-				})),
-				score: getScorePercentage(),
-				totalQuestions: questions.length,
-				completedAt: new Date().toISOString(),
-			};
-			const response = await api.post("/quiz", quizData);
-
+			const formattedResults = results.map(result => ({
+				difficulty: result.difficulty,
+				correct: result.correct
+			}));
+	
+			const response = await api.post("/submit", formattedResults);
+	
 			if (response.status === 200 || response.status === 201) {
 				toast.success("Quiz results saved successfully!");
 			} else {
@@ -87,6 +80,7 @@ const Quiz = () => {
 			setIsSubmitting(false);
 		}
 	};
+	
 
 	const handleAnswerSubmit = (isCorrect) => {
 		const currentQuestion = questions[currentQuestionIndex];
