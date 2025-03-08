@@ -12,6 +12,7 @@ import PrivateRoute from "./components/auth/PrivateRoute";
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./util/Navbar";
 import Quiz from "./pages/Quiz";
+import StatsChart  from "./pages/StatsChart";
 
 function App() {
 	return (
@@ -36,6 +37,15 @@ function App() {
 							<PrivateRoute>
 								<Navbar />
 								<Quiz />
+							</PrivateRoute>
+						}
+					/>
+					<Route
+						path="/progress"
+						element={
+							<PrivateRoute>
+								<Navbar />
+								<StatsChart />
 							</PrivateRoute>
 						}
 					/>
