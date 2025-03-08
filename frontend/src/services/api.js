@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 
 const api = axios.create({
 	baseURL: import.meta.env.VITE_API_URL,
@@ -12,15 +11,5 @@ const api = axios.create({
 // 	}
 // 	return config;
 // });
-
-export const login = async (username, password) => {
-	const response = await api.post("/token/", { username, password });
-	return response.data;
-};
-
-export const register = async (userData) => {
-	const response = await api.post("/register/", userData);
-	return response.data;
-};
 
 export default api;

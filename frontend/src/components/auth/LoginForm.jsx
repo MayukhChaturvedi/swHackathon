@@ -22,17 +22,16 @@ const LoginForm = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
-			const response = await api.post("/auth/login/", {
+			const response = await api.post("/login", {
 				username: formData.username,
 				password: formData.password,
 			});
 
-			if (!response.ok) throw new Error("Login failed");
+			if (response.status != 200) {
+				throw new Error("Login failed");
+			}
 
-			const data = await response.json();
-
-			// Use AuthContext's login instead of localStorage
-			login(data.access); // Pass the access token to AuthProvider
+			login(response.data); // Pass the access token to AuthProvider
 
 			toast.success("Login successful!");
 			navigate("/dashboard");
@@ -55,7 +54,7 @@ const LoginForm = () => {
 					</h2>
 				</div>
 				<form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-					<div className="rounded-md shadow-sm space-y-4">
+					<div className="rounded-md space-y-4">
 						<div>
 							<label htmlFor="username" className="sr-only">
 								Username
@@ -98,6 +97,15 @@ const LoginForm = () => {
 							className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
 						>
 							Sign in
+						</button>
+					</div>
+					<div className="text-center mt-4">
+						Don't have an account?{" "}
+						<button
+							onClick={() => navigate("/register")}
+							className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+						>
+							Sign up
 						</button>
 					</div>
 				</form>
