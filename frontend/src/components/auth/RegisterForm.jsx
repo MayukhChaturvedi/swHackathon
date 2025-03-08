@@ -10,6 +10,7 @@ const RegisterForm = () => {
 		email: "",
 		password: "",
 		password2: "",
+		role: "student",
 	});
 
 	const [errors, setErrors] = useState({

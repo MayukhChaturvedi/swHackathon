@@ -10,6 +10,7 @@ import LoginForm from "./components/auth/LoginForm";
 import RegisterForm from "./components/auth/RegisterForm";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import Dashboard from "./pages/Dashboard";
+import Navbar from "./util/Navbar";
 
 function App() {
 	return (
@@ -22,13 +23,14 @@ function App() {
 					<Route
 						path="/dashboard"
 						element={
-							<PrivateRoute>
+							<>
+								<Navbar />
 								<Dashboard />
-							</PrivateRoute>
+							</>
 						}
 					/>
 					{/* Redirect to login if no route matches */}
-					<Route path="*" element={<Navigate to="/login" />} />
+					<Route path="*" element={<Navigate to="/dashboard" />} />
 				</Routes>
 			</Router>
 		</AuthProvider>

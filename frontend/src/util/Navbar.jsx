@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaUser, FaSignOutAlt } from "react-icons/fa";
 import logo from "../logo.jpg"; // Assumes logo is at root directory
+import { AuthContext } from "../context/AuthContext";
 
 const Navbar = () => {
+	const { logout } = useContext(AuthContext);
 	const navigate = useNavigate();
 	const [activeCategory, setActiveCategory] = useState(null);
 
@@ -17,6 +19,7 @@ const Navbar = () => {
 	const handleSignOut = () => {
 		// Implement your signout logic here
 		// e.g. authContext.signOut()
+		logout();
 		navigate("/login");
 	};
 
@@ -28,7 +31,7 @@ const Navbar = () => {
 					<div className="flex items-center">
 						<Link to="/" className="flex items-center">
 							<img src={logo} alt="Quizzzzz Logo" className="h-8 w-auto mr-2" />
-							<span className="text-white font-bold text-xl">Quizzzzz</span>
+							<span className="text-white font-bold text-xl">Quizzard</span>
 						</Link>
 					</div>
 

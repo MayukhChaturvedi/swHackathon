@@ -13,7 +13,7 @@ const PrivateRoute = ({ children }) => {
 
 	return auth.token ? (
 		<>
-			<Navbar />
+			{/* <Navbar /> */}
 			{children}
 			{/* <Footer /> */}
 		</>
