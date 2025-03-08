@@ -22,6 +22,7 @@ const LoginForm = () => {
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		try {
+			console.log("Logging in...");
 			const response = await api.post("/login", {
 				username: formData.username,
 				password: formData.password,
@@ -30,7 +31,7 @@ const LoginForm = () => {
 			if (response.status != 200) {
 				throw new Error("Login failed");
 			}
-
+			console.log("Login successful!");
 			login(response.data); // Pass the access token to AuthProvider
 
 			toast.success("Login successful!");

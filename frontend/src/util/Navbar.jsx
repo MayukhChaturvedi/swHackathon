@@ -12,6 +12,7 @@ const Navbar = () => {
 	const categories = ["Linux", "Networking", "Programming", "Cloud"];
 
 	const handleCategoryClick = (category) => {
+		navigate(`/quiz/${category.toLowerCase()}`);
 		setActiveCategory(category);
 		// You can add navigation logic here if needed
 	};
@@ -95,7 +96,7 @@ const Navbar = () => {
 						</button>
 					))}
 					<Link
-						to="/custom-quiz"
+						to="/quiz/custom"
 						className="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-500 hover:bg-opacity-50"
 					>
 						Custom Quiz

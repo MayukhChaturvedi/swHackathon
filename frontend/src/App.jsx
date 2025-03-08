@@ -11,6 +11,7 @@ import RegisterForm from "./components/auth/RegisterForm";
 import PrivateRoute from "./components/auth/PrivateRoute";
 import Dashboard from "./pages/Dashboard";
 import Navbar from "./util/Navbar";
+import Quiz from "./pages/Quiz";
 
 function App() {
 	return (
@@ -27,6 +28,15 @@ function App() {
 								<Navbar />
 								<Dashboard />
 							</>
+						}
+					/>
+					<Route
+						path="/quiz/:subject"
+						element={
+							<PrivateRoute>
+								<Navbar />
+								<Quiz />
+							</PrivateRoute>
 						}
 					/>
 					{/* Redirect to login if no route matches */}
