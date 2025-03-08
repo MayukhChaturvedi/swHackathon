@@ -1,5 +1,6 @@
 package com.GG.GG.controller;
 import com.GG.GG.model.Quiz;
+import com.GG.GG.model.Sub;
 import com.GG.GG.model.User;
 import com.GG.GG.repository.UserRepo;
 import com.GG.GG.service.QuizService;
@@ -78,6 +79,11 @@ public class SecCtrl {
             @RequestParam(defaultValue = "Linux") String category,
             @RequestParam(defaultValue = "easy") String difficulty) {
         return quizService.fetchQuizQuestions(limit, category, difficulty);
+    }
+    @PostMapping("/submit")
+    public void submitQuiz(@RequestBody List<Sub> answers) {
+        int totalQuestions = answers.size();
+        int correctCount = 0;
     }
 
 }

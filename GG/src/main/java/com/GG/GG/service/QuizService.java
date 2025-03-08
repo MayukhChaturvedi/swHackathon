@@ -1,6 +1,7 @@
 package com.GG.GG.service;
 
 import com.GG.GG.model.Quiz;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -11,8 +12,11 @@ import java.util.List;
 
 @Service
 public class QuizService {
-    private final String API_URL = "https://quizapi.io/api/v1/questions";
-    private final String API_KEY = "6wQ1fl3f9ZtJOcEJIZnudMGneeCFCksl0lEm0xMc";
+    @Value("${quiz.api.url}")  // Fetch API URL from properties
+    private String apiUrl;
+
+    @Value("${quiz.api.key}")  // Fetch API key from properties
+    private String apiKey;
     private final RestTemplate restTemplate;
 
 
@@ -20,8 +24,8 @@ public class QuizService {
         this.restTemplate = restTemplate;
     }
     public List<Quiz> fetchQuizQuestions(int limit, String category, String difficulty) {
-        String url = UriComponentsBuilder.fromHttpUrl(API_URL)
-                .queryParam("apiKey", API_KEY)
+        String url = UriComponentsBuilder.fromHttpUrl(apiUrl)
+                .queryParam("apiKey", apiKey)
                 .queryParam("limit", limit)
                 .queryParam("category", category)
                 .queryParam("difficulty", difficulty)
