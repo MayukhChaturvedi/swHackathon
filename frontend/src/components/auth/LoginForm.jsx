@@ -99,6 +99,15 @@ const LoginForm = () => {
 							Sign in
 						</button>
 					</div>
+					<div className="text-center mt-4">
+						Don't have an account?{" "}
+						<button
+							onClick={() => navigate("/register")}
+							className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+						>
+							Sign up
+						</button>
+					</div>
 				</form>
 			</div>
 		</div>
