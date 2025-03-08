@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../services/api.js";
 import { toast } from "react-hot-toast";
 import { motion } from "motion/react";
@@ -61,13 +61,13 @@ const Quiz = () => {
 	const submitQuizResults = async () => {
 		setIsSubmitting(true);
 		try {
-			const formattedResults = results.map(result => ({
+			const formattedResults = results.map((result) => ({
 				difficulty: result.difficulty,
-				correct: result.correct
+				correct: result.correct,
 			}));
-	
+
 			const response = await api.post("/submit", formattedResults);
-	
+
 			if (response.status === 200 || response.status === 201) {
 				toast.success("Quiz results saved successfully!");
 			} else {
@@ -80,7 +80,6 @@ const Quiz = () => {
 			setIsSubmitting(false);
 		}
 	};
-	
 
 	const handleAnswerSubmit = (isCorrect) => {
 		const currentQuestion = questions[currentQuestionIndex];
@@ -212,7 +211,6 @@ const Quiz = () => {
 							))}
 						</div>
 					</div>
-
 					<button
 						onClick={restartQuiz}
 						disabled={isSubmitting}
@@ -255,252 +253,255 @@ const Quiz = () => {
 };
 
 const QuizCard = ({ question, onNext, onSubmit }) => {
-	const [selectedAnswer, setSelectedAnswer] = useState(null);
-	const [isSubmitted, setIsSubmitted] = useState(false);
-	const [timeLeft, setTimeLeft] = useState(60);
+	const [selectedAnswers, setSelectedAnswers] = useState({});
+	const [answered, setAnswered] = useState(false);
 	const [isCorrect, setIsCorrect] = useState(false);
-	const timerRef = useRef(null);
+	const [timeLeft, setTimeLeft] = useState(60);
+	const isMultipleCorrect = question.multiple_correct_answers;
 
-	// Get all possible answers from the question
-	const getAnswerOptions = () => {
-		const options = [];
-		for (const key in question.answers) {
-			if (question.answers[key]) {
-				options.push({
-					id: key,
-					text: question.answers[key],
-					isCorrect: question.correct_answers[`${key}_correct`] === "true",
-				});
-			}
-		}
-		return options;
-	};
-
-	const answerOptions = getAnswerOptions();
-
-	// Start timer when component mounts
 	useEffect(() => {
-		timerRef.current = setInterval(() => {
-			setTimeLeft((prevTime) => {
-				if (prevTime <= 1) {
-					clearInterval(timerRef.current);
-					if (!isSubmitted) {
-						handleSubmit(true);
-					}
-					return 0;
-				}
-				return prevTime - 1;
-			});
+		// Reset state when question changes
+		setSelectedAnswers({});
+		setAnswered(false);
+		setIsCorrect(false);
+		setTimeLeft(60);
+	}, [question]);
+
+	useEffect(() => {
+		// Timer setup
+		if (answered || timeLeft <= 0) return;
+
+		const timer = setTimeout(() => {
+			if (timeLeft > 0) {
+				setTimeLeft(timeLeft - 1);
+			} else {
+				handleSubmit();
+			}
 		}, 1000);
 
-		return () => {
-			clearInterval(timerRef.current);
-		};
-	}, []);
+		return () => clearTimeout(timer);
+	}, [timeLeft, answered]);
 
-	// Clear timer when submitted
-	useEffect(() => {
-		if (isSubmitted) {
-			clearInterval(timerRef.current);
+	const handleAnswerSelect = (key) => {
+		if (answered) return;
+
+		if (isMultipleCorrect) {
+			// For multiple answers, toggle the selection
+			setSelectedAnswers((prev) => ({
+				...prev,
+				[key]: !prev[key],
+			}));
+		} else {
+			// For single answer, only select one
+			const newSelection = {};
+			newSelection[key] = true;
+			setSelectedAnswers(newSelection);
 		}
-	}, [isSubmitted]);
+	};
 
-	const handleAnswerSelect = (answerId) => {
-		if (!isSubmitted) {
-			setSelectedAnswer(answerId);
+	const handleSubmit = () => {
+		// Check if any answer is selected for multiple-choice or if an answer is selected for single-choice
+		if (
+			Object.keys(selectedAnswers).filter((key) => selectedAnswers[key])
+				.length === 0
+		) {
+			return; // Don't submit if no answer selected
 		}
+
+		// Determine if answer(s) are correct
+		let correct = false;
+
+		if (isMultipleCorrect) {
+			// Get all the correct answer keys
+			const correctAnswerKeys = Object.entries(question.correct_answers)
+				.filter(([key, value]) => key.endsWith("_correct") && value === "true")
+				.map(([key, _]) => key.replace("_correct", ""));
+
+			// Get all the selected answer keys
+			const selectedKeys = Object.keys(selectedAnswers).filter(
+				(key) => selectedAnswers[key]
+			);
+
+			// Check if all selected answers are correct
+			const allSelectedAreCorrect = selectedKeys.every(
+				(key) => question.correct_answers[`${key}_correct`] === "true"
+			);
+
+			// Check if all correct answers are selected
+			const allCorrectAreSelected = correctAnswerKeys.every(
+				(key) => selectedAnswers[key] === true
+			);
+
+			// Both conditions must be true for multiple correct answers
+			correct = allSelectedAreCorrect && allCorrectAreSelected;
+		} else {
+			// For single correct answer, check if the selected one is correct
+			const selectedKey = Object.keys(selectedAnswers).find(
+				(key) => selectedAnswers[key]
+			);
+			correct = selectedKey
+				? question.correct_answers[`${selectedKey}_correct`] === "true"
+				: false;
+		}
+
+		setIsCorrect(correct);
+		setAnswered(true);
+		onSubmit(correct);
 	};
 
-	const handleSubmit = (isTimeout = false) => {
-		if (isSubmitted || (!selectedAnswer && !isTimeout)) return;
+	// Get available answer keys (answer_a, answer_b, etc.) that have content
+	const answerKeys = Object.keys(question.answers).filter(
+		(key) => question.answers[key] !== null
+	);
 
-		setIsSubmitted(true);
+	const getButtonClass = (key) => {
+		const baseClass =
+			"block w-full text-left p-4 mb-3 rounded-lg transition-all duration-300";
 
-		// Check if answer is correct
-		const correctAnswer = answerOptions.find((option) => option.isCorrect);
-		const isAnswerCorrect = selectedAnswer === correctAnswer.id;
-		setIsCorrect(isAnswerCorrect);
-
-		// Notify parent component
-		onSubmit(isAnswerCorrect);
-	};
-
-	// Format timer display
-	const formatTime = (seconds) => {
-		const mins = Math.floor(seconds / 60);
-		const secs = seconds % 60;
-		return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
-	};
-
-	// Calculate timer color
-	const getTimerColor = () => {
-		if (timeLeft > 30) return "text-green-500";
-		if (timeLeft > 10) return "text-yellow-500";
-		return "text-red-500";
+		if (!answered) {
+			return `${baseClass} ${
+				selectedAnswers[key]
+					? "bg-indigo-100 border-2 border-indigo-500"
+					: "bg-white border-2 border-gray-200 hover:border-indigo-300"
+			}`;
+		} else {
+			// After answering, show correct/incorrect
+			if (question.correct_answers[`${key}_correct`] === "true") {
+				return `${baseClass} bg-green-100 border-2 border-green-500`;
+			} else if (selectedAnswers[key]) {
+				return `${baseClass} bg-red-100 border-2 border-red-500`;
+			} else {
+				return `${baseClass} bg-white border-2 border-gray-200 opacity-70`;
+			}
+		}
 	};
 
 	return (
 		<motion.div
-			initial={{ opacity: 0, y: 10 }}
+			className="bg-white rounded-xl shadow-lg p-6 w-full"
+			initial={{ opacity: 0, y: 20 }}
 			animate={{ opacity: 1, y: 0 }}
-			className="bg-white rounded-xl shadow-xl overflow-hidden"
+			transition={{ duration: 0.5 }}
 		>
-			<div className="p-6">
-				<div className="flex justify-between items-center mb-6">
-					<span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-						{question.category.charAt(0).toUpperCase() +
-							question.category.slice(1)}
+			<div className="mb-6">
+				{/* Timer and difficulty */}
+				<div className="flex justify-between items-center mb-2">
+					<span className="text-sm font-medium text-gray-500">
+						Difficulty: {question.difficulty}
 					</span>
-					<span className="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-sm font-medium">
-						{question.difficulty}
-					</span>
+					<div className="flex items-center">
+						<svg
+							className="w-4 h-4 mr-1 text-gray-600"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth="2"
+								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+							/>
+						</svg>
+						<span
+							className={`text-sm font-medium ${
+								timeLeft < 10 ? "text-red-500" : "text-gray-600"
+							}`}
+						>
+							{timeLeft}s
+						</span>
+					</div>
 				</div>
 
-				<h2 className="text-xl font-bold text-gray-800 mb-3">
+				{/* Question */}
+				<h2 className="text-xl font-semibold text-gray-800 mb-1">
 					{question.question}
 				</h2>
 
+				{/* Description if present */}
 				{question.description && (
-					<p className="text-gray-600 mb-6 italic">{question.description}</p>
+					<p className="text-gray-600 text-sm mb-4">{question.description}</p>
 				)}
 
-				<div className="space-y-3 mb-6">
-					{answerOptions.map((option) => (
-						<button
-							key={option.id}
-							onClick={() => handleAnswerSelect(option.id)}
-							className={`w-full p-4 rounded-lg border-2 transition-all flex items-start ${
-								!isSubmitted
-									? selectedAnswer === option.id
-										? "border-indigo-500 bg-indigo-50"
-										: "border-gray-200 hover:border-indigo-200"
-									: option.isCorrect
-									? "border-green-500 bg-green-50"
-									: selectedAnswer === option.id && !option.isCorrect
-									? "border-red-500 bg-red-50"
-									: "border-gray-200 opacity-60"
-							}`}
-							disabled={isSubmitted}
-						>
-							<span className="text-left">{option.text}</span>
-							{isSubmitted && option.isCorrect && (
-								<svg
-									className="w-5 h-5 ml-auto text-green-500"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M5 13l4 4L19 7"
-									/>
-								</svg>
-							)}
-							{isSubmitted &&
-								selectedAnswer === option.id &&
-								!option.isCorrect && (
-									<svg
-										className="w-5 h-5 ml-auto text-red-500"
-										fill="none"
-										stroke="currentColor"
-										viewBox="0 0 24 24"
-										xmlns="http://www.w3.org/2000/svg"
-									>
-										<path
-											strokeLinecap="round"
-											strokeLinejoin="round"
-											strokeWidth={2}
-											d="M6 18L18 6M6 6l12 12"
-										/>
-									</svg>
-								)}
-						</button>
-					))}
-				</div>
-
-				<div className="flex justify-between items-center">
-					<div className={`text-xl font-mono font-semibold ${getTimerColor()}`}>
-						{formatTime(timeLeft)}
+				{/* Multiple answers notice */}
+				{isMultipleCorrect && (
+					<div className="mb-4 text-sm text-indigo-600 font-medium bg-indigo-50 p-2 rounded">
+						This question has multiple correct answers. Select all that apply.
 					</div>
-
-					{!isSubmitted ? (
-						<button
-							onClick={() => handleSubmit()}
-							disabled={!selectedAnswer}
-							className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							Submit
-						</button>
-					) : (
-						<button
-							onClick={onNext}
-							className="px-6 py-2 bg-indigo-600 text-white font-medium rounded-lg shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50"
-						>
-							Next Question
-						</button>
-					)}
-				</div>
+				)}
 			</div>
 
-			{isSubmitted && (
-				<div className={`p-4 ${isCorrect ? "bg-green-50" : "bg-red-50"}`}>
-					<div className="flex">
-						<div
-							className={`flex-shrink-0 w-5 h-5 ${
-								isCorrect ? "text-green-400" : "text-red-400"
-							}`}
-						>
-							{isCorrect ? (
-								<svg
-									fill="currentColor"
-									viewBox="0 0 20 20"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										fillRule="evenodd"
-										d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-										clipRule="evenodd"
-									></path>
-								</svg>
-							) : (
-								<svg
-									fill="currentColor"
-									viewBox="0 0 20 20"
-									xmlns="http://www.w3.org/2000/svg"
-								>
-									<path
-										fillRule="evenodd"
-										d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-										clipRule="evenodd"
-									></path>
-								</svg>
-							)}
-						</div>
-						<div className="ml-3">
-							<h3
-								className={`text-sm font-medium ${
-									isCorrect ? "text-green-800" : "text-red-800"
+			{/* Answer options */}
+			<div className="mb-6">
+				{answerKeys.map((key) => (
+					<button
+						key={key}
+						onClick={() => handleAnswerSelect(key)}
+						disabled={answered}
+						className={getButtonClass(key)}
+					>
+						<div className="flex items-start">
+							<div
+								className={`w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center mr-3 border ${
+									selectedAnswers[key]
+										? isMultipleCorrect
+											? "bg-indigo-500 border-indigo-500 text-white"
+											: "bg-indigo-500 border-indigo-500 text-white"
+										: "border-gray-300"
 								}`}
 							>
-								{isCorrect ? "Correct Answer!" : "Incorrect Answer"}
-							</h3>
-							<div className="mt-2 text-sm text-gray-700">
-								<p>
-									{question.explanation ||
-										(isCorrect
-											? "Great job!"
-											: `The correct answer was: ${
-													answerOptions.find((option) => option.isCorrect)?.text
-											  }`)}
-								</p>
+								{isMultipleCorrect ? (
+									selectedAnswers[key] ? (
+										"✓"
+									) : (
+										""
+									)
+								) : (
+									<span className="text-xs">{key.slice(-1).toUpperCase()}</span>
+								)}
 							</div>
+							<span>{question.answers[key]}</span>
 						</div>
-					</div>
+					</button>
+				))}
+			</div>
+
+			{/* Explanation when answered */}
+			{answered && question.explanation && (
+				<div
+					className={`p-4 mb-6 rounded-lg ${
+						isCorrect ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
+					}`}
+				>
+					<p className="font-medium mb-1">
+						{isCorrect ? "Correct!" : "Incorrect!"}
+					</p>
+					<p className="text-sm">{question.explanation}</p>
 				</div>
 			)}
+
+			{/* Action buttons */}
+			<div className="flex justify-end">
+				{!answered ? (
+					<button
+						onClick={handleSubmit}
+						disabled={
+							Object.keys(selectedAnswers).filter((key) => selectedAnswers[key])
+								.length === 0
+						}
+						className="py-2 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transform transition hover:scale-105 disabled:opacity-70"
+					>
+						Submit Answer
+					</button>
+				) : (
+					<button
+						onClick={onNext}
+						className="py-2 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-lg shadow-md hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transform transition hover:scale-105"
+					>
+						Next Question
+					</button>
+				)}
+			</div>
 		</motion.div>
 	);
 };
