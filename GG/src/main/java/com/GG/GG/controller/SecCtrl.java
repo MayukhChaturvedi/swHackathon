@@ -1,6 +1,8 @@
 package com.GG.GG.controller;
+import com.GG.GG.model.Quiz;
 import com.GG.GG.model.User;
 import com.GG.GG.repository.UserRepo;
+import com.GG.GG.service.QuizService;
 import com.GG.GG.services.JwtService;
 import com.GG.GG.services.UserDetailService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +32,8 @@ public class SecCtrl {
 
     @Autowired
     private BCryptPasswordEncoder bCryptPasswordEncoder;
+    @Autowired
+    private QuizService quizService;
 
     @PostMapping("/login")
     public String login(@RequestBody User user) {
@@ -67,4 +71,13 @@ public class SecCtrl {
     public String hello() {
         return "Hello World!";
     }
+
+    @GetMapping("/questions")
+    public List<Quiz> getQuizQuestions(
+            @RequestParam(defaultValue = "10") int limit,
+            @RequestParam(defaultValue = "Linux") String category,
+            @RequestParam(defaultValue = "easy") String difficulty) {
+        return quizService.fetchQuizQuestions(limit, category, difficulty);
+    }
+
 }
